@@ -42,7 +42,7 @@ fn find_calibration_value(line: &str, map: &HashMap<&str, usize>) -> usize {
     let mut last_index = None;
     let mut last_value = None;
     for (key, value) in map.iter() {
-        if let Some(i) = line.find(key) {
+        for (i, _) in line.match_indices(key) {
             if first_index.is_none() || first_index.unwrap() > i {
                 first_index = Some(i);
                 first_value = Some(value)

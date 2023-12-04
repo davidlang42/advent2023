@@ -66,12 +66,19 @@ impl Schematic {
                         let min_r = if r == 0 { r } else { r - 1 };
                         let max_r = if r == self.rows() - 1 { r } else { r + 1 };
                         let min_c = if s == 0 { s } else { s - 1 };
-                        let max_c = if c == self.columns() - 1 { c } else { c + 1 };
-                        if self.contains_symbol(min_r, max_r, min_c, max_c) {
+                        if self.contains_symbol(min_r, max_r, min_c, c) {
                             parts.push(number);
                         }
                     }
                     start = None;
+                }
+            }
+            if let Some(s) = start {
+                let min_r = if r == 0 { r } else { r - 1 };
+                let max_r = if r == self.rows() - 1 { r } else { r + 1 };
+                let min_c = if s == 0 { s } else { s - 1 };
+                if self.contains_symbol(min_r, max_r, min_c, self.columns() - 1) {
+                    parts.push(number);
                 }
             }
         }

@@ -59,6 +59,16 @@ impl FromStr for Round {
         })
     }
 }
+
+impl Game {
+    fn power_of_minimum_cubes(&self) -> usize {
+        let min_red = self.rounds.iter().map(|r| r.red).filter(|n| *n > 0).max().unwrap();
+        let min_green = self.rounds.iter().map(|r| r.green).filter(|n| *n > 0).max().unwrap();
+        let min_blue = self.rounds.iter().map(|r| r.blue).filter(|n| *n > 0).max().unwrap();
+        min_red * min_green * min_blue
+    }
+}
+
 fn main() {
     let args: Vec<String> = env::args().collect();
     if args.len() == 2 {
@@ -70,9 +80,10 @@ fn main() {
         let max_green = 13;
         let max_blue = 14;
         let mut game_number_sum = 0;
+        let mut power_sum = 0;
         for game in games {
             let mut possible = true;
-            for round in game.rounds {
+            for round in &game.rounds {
                 if round.red > max_red || round.green > max_green || round.blue > max_blue {
                     possible = false;
                 }
@@ -80,8 +91,10 @@ fn main() {
             if possible {
                 game_number_sum += game.number;
             }
+            power_sum += game.power_of_minimum_cubes();
         }
         println!("Game number sum: {}", game_number_sum);
+        println!("Power sum: {}", power_sum);
     } else {
         println!("Please provide 1 argument: Filename");
     }

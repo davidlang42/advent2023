@@ -1,7 +1,6 @@
 use std::fs;
 use std::env;
 use std::str::FromStr;
-use std::collections::HashMap;
 
 struct Almanac {
     seeds: Vec<usize>,
@@ -14,15 +13,16 @@ struct Almanac {
     humidity_to_location: NumberMap
 }
 
-struct NumberMap(HashMap<usize, usize>);
+struct NumberMap(Vec<(usize, usize, isize)>); // start, end, offset
 
 impl NumberMap {
     fn get(&self, input: usize) -> usize {
-        if let Some(output) = self.0.get(&input) {
-            *output
-        } else {
-            input
+        for (start, end, offset) in &self.0 {
+            if input >= *start && input <= *end {
+                return (input as isize + offset) as usize;
+            }
         }
+        input
     }
 }
 
@@ -50,20 +50,18 @@ impl FromStr for NumberMap {
         //humidity-to-location map:
         //50 98 2
         //52 50 48
-        let mut map = HashMap::new();
+        let mut vec = Vec::new();
         for line in text.lines().skip(1) {
             let numbers: Vec<usize> = line.split(" ").map(|s| s.parse().unwrap()).collect();
             if numbers.len() != 3 {
                 return Err(format!("Expected 3 numbers, found {}", numbers.len()));
             }
-            let source_start = numbers[1];
-            let dest_offset = numbers[0] as isize - source_start as isize;
-            let length = numbers[2];
-            for i in source_start..(source_start + length) {
-                map.insert(i, (i as isize + dest_offset) as usize);
-            }
+            let start = numbers[1];
+            let offset = numbers[0] as isize - start as isize;
+            let end = start + numbers[2] - 1;
+            vec.push((start, end, offset));
         }
-        Ok(Self(map))
+        Ok(Self(vec))
     }
 }
 

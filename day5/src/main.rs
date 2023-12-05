@@ -2,7 +2,7 @@ use std::fs;
 use std::env;
 use std::str::FromStr;
 
-struct Almanac {
+struct Almanac1 {
     seeds: Vec<usize>,
     seed_to_soil: NumberMap,
     soil_to_fertilizer: NumberMap,
@@ -11,6 +11,22 @@ struct Almanac {
     light_to_temperature: NumberMap,
     temperature_to_humidity: NumberMap,
     humidity_to_location: NumberMap
+}
+
+struct Almanac2 {
+    seeds: Vec<Range>,
+    seed_to_soil: NumberMap,
+    soil_to_fertilizer: NumberMap,
+    fertilizer_to_water: NumberMap,
+    water_to_light: NumberMap,
+    light_to_temperature: NumberMap,
+    temperature_to_humidity: NumberMap,
+    humidity_to_location: NumberMap
+}
+
+struct Range {
+    from: usize,
+    to: usize
 }
 
 struct NumberMap(Vec<(usize, usize, isize)>); // start, end, offset
@@ -24,9 +40,13 @@ impl NumberMap {
         }
         input
     }
+
+    fn get_range(&self, input: Range) -> HashMap<Range, isize> {
+        
+    }
 }
 
-impl Almanac {
+impl Almanac1 {
     fn locations(&self) -> Vec<usize> {
         let mut locations = Vec::new();
         for seed in &self.seeds {
@@ -65,7 +85,7 @@ impl FromStr for NumberMap {
     }
 }
 
-impl FromStr for Almanac {
+impl FromStr for Almanac1 {
     type Err = String;
 
     fn from_str(text: &str) -> Result<Self, Self::Err> {
@@ -91,6 +111,63 @@ impl FromStr for Almanac {
             temperature_to_humidity,
             humidity_to_location
         })
+    }
+}
+
+impl FromStr for Almanac2 {
+    type Err = String;
+
+    fn from_str(text: &str) -> Result<Self, Self::Err> {
+        let sections: Vec<&str> = text.split("\r\n\r\n").collect();
+        if sections.len() != 8 {
+            return Err(format!("Expected 8 sections, found {}", sections.len()));
+        }
+        let ranges: Vec<usize> = sections[0].split(": ").nth(1).unwrap().split(" ").map(|s| s.parse().unwrap()).collect();
+        if ranges.len() % 2 != 0 {
+            panic!("Uneven seed ranges");
+        }
+        let mut i = 0;
+        let mut seeds = Vec::new();
+        while i < ranges.len() {
+            for s in ranges[i]..(ranges[i] + ranges[i+1]) {
+                seeds.push(s);
+            }
+            i += 2;
+        }
+        let seed_to_soil = sections[1].parse().unwrap();
+        let soil_to_fertilizer = sections[2].parse().unwrap();
+        let fertilizer_to_water = sections[3].parse().unwrap();
+        let water_to_light = sections[4].parse().unwrap();
+        let light_to_temperature = sections[5].parse().unwrap();
+        let temperature_to_humidity = sections[6].parse().unwrap();
+        let humidity_to_location = sections[7].parse().unwrap();
+        Ok(Self {
+            seeds,
+            seed_to_soil,
+            soil_to_fertilizer,
+            fertilizer_to_water,
+            water_to_light,
+            light_to_temperature,
+            temperature_to_humidity,
+            humidity_to_location
+        })
+    }
+}
+
+impl Almanac2 {
+    fn locations(&self) -> Vec<Range> {
+        let mut locations = Vec::new();
+        for seed in &self.seeds {
+            let soil = self.seed_to_soil.get_range(*seed);
+            let fert = self.soil_to_fertilizer.get_range(soil);
+            let water = self.fertilizer_to_water.get_range(fert);
+            let light = self.water_to_light.get_range(water);
+            let temp = self.light_to_temperature.get_range(light);
+            let hum = self.temperature_to_humidity.get_range(temp);
+            let location = self.humidity_to_location.get_range(hum);
+            locations.push(location);
+        }
+        locations
     }
 }
 

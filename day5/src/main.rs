@@ -59,7 +59,7 @@ impl NumberMap {
                             to: *end,
                             offset: range.offset + offset
                         });
-                        range.from = *end;
+                        range.from = *end + 1;
                         // more to do
                     }
                 } else if *start <= range.to {
@@ -70,13 +70,13 @@ impl NumberMap {
                             to: range.to,
                             offset: range.offset + offset
                         });
-                        range.to = *start;
+                        range.to = *start - 1;
                         break; // no more to do in this range
                     } else if *end >= range.from {
                         // overlap middle
                         results.push(Range { // before the overlap
                             from: range.from,
-                            to: *start,
+                            to: *start - 1,
                             offset: range.offset
                         });
                         results.push(Range { // the overlap
@@ -84,7 +84,7 @@ impl NumberMap {
                             to: *end,
                             offset: range.offset + offset
                         });
-                        range.from = *end;
+                        range.from = *end + 1;
                         // more to do
                     }
                 }

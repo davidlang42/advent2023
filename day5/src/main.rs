@@ -66,42 +66,6 @@ impl Almanac {
             humidity_to_location
         }
     }
-
-    fn type2(text: &str) -> Self {
-        let sections: Vec<&str> = text.split("\r\n\r\n").collect();
-        if sections.len() != 8 {
-            panic!("Expected 8 sections, found {}", sections.len());
-        }
-        let ranges: Vec<usize> = sections[0].split(": ").nth(1).unwrap().split(" ").map(|s| s.parse().unwrap()).collect();
-        if ranges.len() % 2 != 0 {
-            panic!("Uneven seed ranges");
-        }
-        let mut i = 0;
-        let mut seeds = Vec::new();
-        while i < ranges.len() {
-            for s in ranges[i]..(ranges[i] + ranges[i+1]) {
-                seeds.push(s);
-            }
-            i += 2;
-        }
-        let seed_to_soil = sections[1].parse().unwrap();
-        let soil_to_fertilizer = sections[2].parse().unwrap();
-        let fertilizer_to_water = sections[3].parse().unwrap();
-        let water_to_light = sections[4].parse().unwrap();
-        let light_to_temperature = sections[5].parse().unwrap();
-        let temperature_to_humidity = sections[6].parse().unwrap();
-        let humidity_to_location = sections[7].parse().unwrap();
-        Self {
-            seeds,
-            seed_to_soil,
-            soil_to_fertilizer,
-            fertilizer_to_water,
-            water_to_light,
-            light_to_temperature,
-            temperature_to_humidity,
-            humidity_to_location
-        }
-    }
 }
 
 impl FromStr for NumberMap {
@@ -133,15 +97,10 @@ fn main() {
         let text = fs::read_to_string(&filename)
             .expect(&format!("Error reading from {}", filename));
         let a1: Almanac = Almanac::type1(&text);
-        let l1 = a1.locations();
-        println!("Locations: {:?}", l1);
-        let ll1 = l1.iter().min().unwrap();
-        println!("Lowest: {}", ll1);
-        let a2: Almanac = Almanac::type2(&text);
-        let l2 = a2.locations();
-        println!("Locations: {:?}", l2);
-        let ll2 = l2.iter().min().unwrap();
-        println!("Lowest: {}", ll2);
+        let locations = a1.locations();
+        println!("Locations: {:?}", locations);
+        let lowest_location = locations.iter().min().unwrap();
+        println!("Lowest: {}", lowest_location);
     } else {
         println!("Please provide 1 argument: Filename");
     }

@@ -58,9 +58,13 @@ fn main() {
         let filename = &args[1];
         let text = fs::read_to_string(&filename)
             .expect(&format!("Error reading from {}", filename));
-        let races = parse(&text);
-        let product: usize = races.iter().map(|r| r.ways_to_beat()).product::<usize>();
-        println!("Product: {}", product);
+        let mut races = parse(&text);
+        let mut product: usize = races.iter().map(|r| r.ways_to_beat()).product::<usize>();
+        println!("Separate product: {}", product);
+        let text_no_spaces: String = text.chars().filter(|c| *c != ' ').collect();
+        races = parse(&text_no_spaces);
+        product = races.iter().map(|r| r.ways_to_beat()).product::<usize>();
+        println!("Combined product: {}", product);
     } else {
         println!("Please provide 1 argument: Filename");
     }

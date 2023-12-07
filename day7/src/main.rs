@@ -16,6 +16,7 @@ struct Hand {
 
 #[derive(Copy, Clone, Debug, PartialOrd, Ord, PartialEq, Eq, Hash)]
 enum Card {
+    Joker,
     Two,
     Three,
     Four,
@@ -25,7 +26,6 @@ enum Card {
     Eight,
     Nine,
     Ten,
-    Jack,
     Queen,
     King,
     Ace
@@ -83,15 +83,31 @@ enum Type {
 
 impl Hand {
     fn hand_type(&self) -> Type {
-        let g = self.group();
-        match (g.len(), g.values().max().unwrap()) {
-            (1, _) => Type::FiveOfAKind,
-            (2, 4) => Type::FourOfAKind,
-            (2, 3) => Type::FullHouse,
-            (3, 3) => Type::ThreeOfAKind,
-            (3, 2) => Type::TwoPair,
-            (4, _) => Type::OnePair,
-            (5, _) => Type::HighCard,
+        let mut g = self.group();
+        let jokers: usize = g.remove(&Card::Joker).unwrap_or(0);
+        match (g.len(), *g.values().max().unwrap_or(&0), jokers) {
+            (0, _, 5) => Type::FiveOfAKind,
+            (1, _, 0) => Type::FiveOfAKind,
+            (1, _, 1) => Type::FiveOfAKind,
+            (1, _, 2) => Type::FiveOfAKind,
+            (1, _, 3) => Type::FiveOfAKind,
+            (1, _, 4) => Type::FiveOfAKind,
+            (_, _, 4) => Type::FourOfAKind,
+            (2, 4, 0) => Type::FourOfAKind,
+            (2, 3, 1) => Type::FourOfAKind,
+            (2, 2, 2) => Type::FourOfAKind,
+            (2, 1, 3) => Type::FourOfAKind,
+            (2, 3, 0) => Type::FullHouse,
+            (2, 2, 1) => Type::FullHouse,
+            (2, 1, 2) => Type::FullHouse,
+            (3, 3, 0) => Type::ThreeOfAKind,
+            (3, 2, 1) => Type::ThreeOfAKind,
+            (3, 1, 2) => Type::ThreeOfAKind,
+            (3, 2, 0) => Type::TwoPair,
+            (3, 1, 1) => Type::TwoPair,
+            (4, 2, 0) => Type::OnePair,
+            (4, 1, 1) => Type::OnePair,
+            (5, _, _) => Type::HighCard,
             _ => panic!("Type not found: {:?}", self.cards)
         }
     }
@@ -131,7 +147,7 @@ impl Card {
             '8' => Self::Eight,
             '9' => Self::Nine,
             'T' => Self::Ten,
-            'J' => Self::Jack,
+            'J' => Self::Joker,
             'Q' => Self::Queen,
             'K' => Self::King,
             'A' => Self::Ace,

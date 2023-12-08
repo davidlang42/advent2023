@@ -55,6 +55,29 @@ impl Map {
         }
         i
     }
+
+    fn ghost_steps(&self, directions: &Vec<Direction>) -> usize {
+        let mut i = 0;
+        let mut current = Vec::new();
+        for k in self.0.keys() {
+            if k.chars().nth(2).unwrap() == 'A' {
+                current.push(k);
+            }
+        }
+        while current.iter().any(|k| k.chars().nth(2).unwrap() != 'Z') {
+            let mut new = Vec::new();
+            for c in current {
+                let node = self.0.get(c).unwrap();
+                new.push(match directions[i % directions.len()] {
+                    Direction::Left => &node.left,
+                    Direction::Right => &node.right
+                });
+            }
+            current = new;
+            i += 1;
+        }
+        i
+    }
 }
 
 fn main() {
@@ -68,7 +91,8 @@ fn main() {
         let map: Map = sections[1].parse().unwrap();
         // println!("Directions: {:?}", directions);
         // println!("Map: {:?}", map);
-        println!("AAA-ZZZ in {} steps", map.steps("AAA", "ZZZ", &directions))
+        //println!("AAA-ZZZ in {} steps", map.steps("AAA", "ZZZ", &directions));
+        println!("AAA-ZZZ in {} ghost steps", map.ghost_steps(&directions));
     } else {
         println!("Please provide 1 argument: Filename");
     }

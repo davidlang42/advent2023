@@ -62,7 +62,7 @@ impl Image {
         if b.r > a.r {
             for r in a.r..b.r {
                 if self.row_empty[r] {
-                    d += 2;
+                    d += 1000000;
                 } else {
                     d += 1;
                 }
@@ -70,7 +70,7 @@ impl Image {
         } else {
             for r in b.r..a.r {
                 if self.row_empty[r] {
-                    d += 2;
+                    d += 1000000;
                 } else {
                     d += 1;
                 }
@@ -79,7 +79,7 @@ impl Image {
         if b.c > a.c {
             for c in a.c..b.c {
                 if self.col_empty[c] {
-                    d += 2;
+                    d += 1000000;
                 } else {
                     d += 1;
                 }
@@ -87,7 +87,7 @@ impl Image {
         } else {
             for c in b.c..a.c {
                 if self.col_empty[c] {
-                    d += 2;
+                    d += 1000000;
                 } else {
                     d += 1;
                 }

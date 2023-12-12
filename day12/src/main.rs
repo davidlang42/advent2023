@@ -118,6 +118,22 @@ impl Report {
             return vec![];
         }
     }
+
+    fn unfold(&self) -> Self {
+        let mut broken = Vec::new();
+        let mut groups = Vec::new();
+        for i in 0..5 {
+            broken.append(&mut self.broken.clone());
+            if i != 4 {
+                broken.push(None);
+            }
+            groups.append(&mut self.groups.clone());
+        }
+        Self {
+            broken,
+            groups
+        }
+    }
 }
 
 fn format_solution(state: &Vec<Option<bool>>) -> String {
@@ -135,8 +151,8 @@ fn main() {
         let filename = &args[1];
         let text = fs::read_to_string(&filename)
             .expect(&format!("Error reading from {}", filename));
-        let records: Vec<Report> = text.lines().map(|s| s.parse().unwrap()).collect();
-        let combos: Vec<Vec<String>> = records.iter().map(|r| r.possible_combinations()).collect();
+        let reports: Vec<Report> = text.lines().map(|s| s.parse().unwrap()).collect();
+        let combos: Vec<Vec<String>> = reports.iter().map(|r| r.possible_combinations()).collect();
         // for i in 0..combos.len() {
         //     println!("Set [{}]", i);
         //     for j in 0..combos[i].len() {
@@ -146,6 +162,12 @@ fn main() {
         // }
         let sum: usize = combos.iter().map(|c| c.len()).sum();
         println!("Total: {}", sum);
+        let new_reports: Vec<Report> = reports.iter().map(|r| r.unfold()).collect();
+        println!("--UNFOLD--");
+        let new_combos: Vec<Vec<String>> = new_reports.iter().map(|r| r.possible_combinations()).collect();
+        let new_sum: usize = new_combos.iter().map(|c| c.len()).sum();
+        println!("Total: {}", new_sum);
+
     } else {
         println!("Please provide 1 argument: Filename");
     }

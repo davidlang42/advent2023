@@ -31,23 +31,23 @@ impl FromStr for Report {
 }
 
 impl Report {
-    fn possible_combinations(&self) -> Vec<String> {
+    fn possible_combinations(&self) -> usize {
         Self::combinations(&self.broken, 0, 0, &self.groups)
     }
 
-    fn combinations(state: &Vec<Option<bool>>, mut index: usize, mut group: usize, mut remaining: &[usize]) -> Vec<String> {
+    fn combinations(state: &Vec<Option<bool>>, mut index: usize, mut group: usize, mut remaining: &[usize]) -> usize {
         if remaining.len() != 0 {
             let max_remaining_broken = state.iter().skip(index).filter(|o| o.is_none() || o.unwrap()).count() + group;
             let required_broken = remaining.iter().sum::<usize>();
             if max_remaining_broken < required_broken {
                 // not enough BROKEN left to complete
-                return vec![];
+                return 0;
             }
             let max_remaining_space = state.len() - index + group;
             let required_space = required_broken + remaining.len() - 1;
             if max_remaining_space < required_space {
                 // not enough space left to complete
-                return vec![];
+                return 0;
             }
         }
         //println!("START: index [{}], group={}, remaining {:?}", index, group, remaining);
@@ -58,21 +58,21 @@ impl Report {
                 if known_values.any(|b| b) {
                     // but some are broken, therefore not possible
                     //println!("NOPE: no remaining, but has future groups");
-                    return vec![];
+                    return 0;
                 } else if group > 0 {
                     // but group in progress, therefore not possible
                     //println!("NOPE: no remaining, but has current group");
-                    return vec![];
+                    return 0;
                 } else {
                     // none are broken, therefore set all to not broken and this is possible
-                    let mut new_state = state.clone();
-                    for i in index..new_state.len() {
-                        if new_state[i].is_none() {
-                            new_state[i] = Some(false)
-                        }
-                    }
+                    // let mut new_state = state.clone();
+                    // for i in index..new_state.len() {
+                    //     if new_state[i].is_none() {
+                    //         new_state[i] = Some(false)
+                    //     }
+                    // }
                     //println!("YEP: no remaining, no values -- {}", format_solution(&new_state));
-                    return vec![format_solution(&new_state)];
+                    return 1;
                 }
             }
             if let Some(current) = state[index] {
@@ -81,13 +81,13 @@ impl Report {
                     if group > remaining[0] {
                         // group too big, not possible
                         //println!("NOPE: current group too big");
-                        return vec![];
+                        return 0;
                     }
                 } else if group > 0 {
                     if group != remaining[0] {
                         // group is wrong size, not possible
                         //println!("NOPE: group finished, wrong size {} != {}", group, remaining[0]);
-                        return vec![];
+                        return 0;
                     } else {
                         // group is correct size, keep going
                         remaining = &remaining[1..];
@@ -102,7 +102,7 @@ impl Report {
                 new_state[index] = Some(true);
                 let mut combos = Self::combinations(&new_state, index, group, remaining);
                 new_state[index] = Some(false);
-                combos.append(&mut Self::combinations(&new_state, index, group, remaining));
+                combos += Self::combinations(&new_state, index, group, remaining);
                 return combos;
             }
             index += 1;
@@ -112,24 +112,24 @@ impl Report {
             if group == 0 {
                 // no group to finish
                 //println!("YEP: no remaining, no current group -- {}", format_solution(&state));
-                return vec![format_solution(&state)];
+                return 1;
             } else {
                 // we had a group in progress when we wanted none
                 //println!("NOPE: no remaining, but has current group");
-                return vec![];
+                return 0;
             }
         } else if group != remaining[0] {
             // group is wrong size (or zero), not possible
             //println!("NOPE: final group, wrong size {} != {}", group, remaining[0]);
-            return vec![];
+            return 0;
         } else if remaining.len() == 1 {
             // group is correct size, and its the last group
             //println!("YEP: final group correct size -- {}", format_solution(&state));
-            return vec![format_solution(&state)];
+            return 1;
         } else {
             // group is correct size, BUT THERE ARE MORE GROUPS
             //println!("NOPE: final group correct size, but more groups remain");
-            return vec![];
+            return 0;
         }
     }
 
@@ -150,15 +150,6 @@ impl Report {
     }
 }
 
-fn format_solution(state: &Vec<Option<bool>>) -> String {
-    let s: String = state.iter().map(|o| match o {
-        Some(true) => '#',
-        Some(false) => '.',
-        None => '?'
-    }).collect();
-    s
-}
-
 fn main() {
     let args: Vec<String> = env::args().collect();
     if args.len() == 2 {
@@ -166,7 +157,7 @@ fn main() {
         let text = fs::read_to_string(&filename)
             .expect(&format!("Error reading from {}", filename));
         let reports: Vec<Report> = text.lines().map(|s| s.parse().unwrap()).collect();
-        let combos: Vec<Vec<String>> = reports.iter().map(|r| r.possible_combinations()).collect();
+        let combos: Vec<usize> = reports.iter().map(|r| r.possible_combinations()).collect();
         // for i in 0..combos.len() {
         //     println!("Set [{}]", i);
         //     for j in 0..combos[i].len() {
@@ -174,12 +165,12 @@ fn main() {
         //     }
         //     println!("");
         // }
-        let sum: usize = combos.iter().map(|c| c.len()).sum();
+        let sum: usize = combos.iter().sum();
         println!("Total: {}", sum);
         let new_reports: Vec<Report> = reports.iter().map(|r| r.unfold()).collect();
         println!("--UNFOLD--");
-        let new_combos: Vec<Vec<String>> = new_reports.iter().map(|r| r.possible_combinations()).collect();
-        let new_sum: usize = new_combos.iter().map(|c| c.len()).sum();
+        let new_combos: Vec<usize> = new_reports.iter().map(|r| r.possible_combinations()).collect();
+        let new_sum: usize = new_combos.iter().sum();
         println!("Total: {}", new_sum);
 
     } else {

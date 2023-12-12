@@ -2,6 +2,7 @@ use std::fs;
 use std::env;
 use std::str::FromStr;
 use std::time::Instant;
+use rayon::prelude::*;
 
 struct Report {
     broken: Vec<Option<bool>>,
@@ -171,10 +172,9 @@ fn main() {
         let mut new_reports: Vec<Report> = reports.iter().map(|r| r.unfold()).collect();
         println!("--UNFOLD--");
         let start = Instant::now();
-        let new_combos: Vec<usize> = new_reports.iter_mut().map(|r| r.possible_combinations()).collect();
+        new_reports.par_iter_mut().for_each(|r| println!("{}", r.possible_combinations()));
         let duration = start.elapsed();
-        let new_sum: usize = new_combos.iter().sum();
-        println!("Total: {} (calculated in {:.2}s)", new_sum, duration.as_secs_f64());
+        println!("(calculated in {:.2}s)", duration.as_secs_f64());
 
     } else {
         println!("Please provide 1 argument: Filename");

@@ -1,6 +1,7 @@
 use std::fs;
 use std::env;
 use std::str::FromStr;
+use std::time::Instant;
 
 struct Report {
     broken: Vec<Option<bool>>,
@@ -169,9 +170,11 @@ fn main() {
         println!("Total: {}", sum);
         let new_reports: Vec<Report> = reports.iter().map(|r| r.unfold()).collect();
         println!("--UNFOLD--");
+        let start = Instant::now();
         let new_combos: Vec<usize> = new_reports.iter().map(|r| r.possible_combinations()).collect();
+        let duration = start.elapsed();
         let new_sum: usize = new_combos.iter().sum();
-        println!("Total: {}", new_sum);
+        println!("Total: {} (calculated in {:.2}s)", new_sum, duration.as_secs_f64());
 
     } else {
         println!("Please provide 1 argument: Filename");

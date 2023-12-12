@@ -36,6 +36,20 @@ impl Report {
     }
 
     fn combinations(state: &Vec<Option<bool>>, mut index: usize, mut group: usize, mut remaining: &[usize]) -> Vec<String> {
+        if remaining.len() != 0 {
+            let max_remaining_broken = state.iter().skip(index).filter(|o| o.is_none() || o.unwrap()).count() + group;
+            let required_broken = remaining.iter().sum::<usize>();
+            if max_remaining_broken < required_broken {
+                // not enough BROKEN left to complete
+                return vec![];
+            }
+            let max_remaining_space = state.len() - index + group;
+            let required_space = required_broken + remaining.len() - 1;
+            if max_remaining_space < required_space {
+                // not enough space left to complete
+                return vec![];
+            }
+        }
         //println!("START: index [{}], group={}, remaining {:?}", index, group, remaining);
         while index < state.len() {
             if remaining.len() == 0 {

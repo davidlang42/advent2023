@@ -32,11 +32,11 @@ impl FromStr for Report {
 }
 
 impl Report {
-    fn possible_combinations(&self) -> usize {
-        Self::combinations(&self.broken, 0, 0, &self.groups)
+    fn possible_combinations(&mut self) -> usize {
+        Self::combinations(&mut self.broken, 0, 0, &self.groups)
     }
 
-    fn combinations(state: &Vec<Option<bool>>, mut index: usize, mut group: usize, mut remaining: &[usize]) -> usize {
+    fn combinations(state: &mut Vec<Option<bool>>, mut index: usize, mut group: usize, mut remaining: &[usize]) -> usize {
         if remaining.len() != 0 {
             let max_remaining_broken = state.iter().skip(index).filter(|o| o.is_none() || o.unwrap()).count() + group;
             let required_broken = remaining.iter().sum::<usize>();
@@ -99,11 +99,11 @@ impl Report {
             } else {
                 // we found an unknown, try each option
                 //println!("EXPAND: found unknown at [{}]", index);
-                let mut new_state = state.clone();
-                new_state[index] = Some(true);
-                let mut combos = Self::combinations(&new_state, index, group, remaining);
-                new_state[index] = Some(false);
-                combos += Self::combinations(&new_state, index, group, remaining);
+                state[index] = Some(true);
+                let mut combos = Self::combinations(state, index, group, remaining);
+                state[index] = Some(false);
+                combos += Self::combinations(state, index, group, remaining);
+                state[index] = None;
                 return combos;
             }
             index += 1;
@@ -157,8 +157,8 @@ fn main() {
         let filename = &args[1];
         let text = fs::read_to_string(&filename)
             .expect(&format!("Error reading from {}", filename));
-        let reports: Vec<Report> = text.lines().map(|s| s.parse().unwrap()).collect();
-        let combos: Vec<usize> = reports.iter().map(|r| r.possible_combinations()).collect();
+        let mut reports: Vec<Report> = text.lines().map(|s| s.parse().unwrap()).collect();
+        let combos: Vec<usize> = reports.iter_mut().map(|r| r.possible_combinations()).collect();
         // for i in 0..combos.len() {
         //     println!("Set [{}]", i);
         //     for j in 0..combos[i].len() {
@@ -168,10 +168,10 @@ fn main() {
         // }
         let sum: usize = combos.iter().sum();
         println!("Total: {}", sum);
-        let new_reports: Vec<Report> = reports.iter().map(|r| r.unfold()).collect();
+        let mut new_reports: Vec<Report> = reports.iter().map(|r| r.unfold()).collect();
         println!("--UNFOLD--");
         let start = Instant::now();
-        let new_combos: Vec<usize> = new_reports.iter().map(|r| r.possible_combinations()).collect();
+        let new_combos: Vec<usize> = new_reports.iter_mut().map(|r| r.possible_combinations()).collect();
         let duration = start.elapsed();
         let new_sum: usize = new_combos.iter().sum();
         println!("Total: {} (calculated in {:.2}s)", new_sum, duration.as_secs_f64());

@@ -71,12 +71,12 @@ impl FromStr for Pattern {
 
 impl Pattern {
     fn mirror(&self) -> Option<Mirror> {
-        for r in 1..(self.rows.len() - 2) {
+        for r in 0..(self.rows.len() - 1) {
             if Self::check_mirror(&self.rows, r, r + 1) {
                 return Some(Mirror::AfterRow(r + 1));
             }
         }
-        for c in 1..(self.cols.len() - 2) {
+        for c in 0..(self.cols.len() - 1) {
             if Self::check_mirror(&self.cols, c, c + 1) {
                 return Some(Mirror::AfterColumn(c + 1));
             }
@@ -109,7 +109,7 @@ fn main() {
         let mut sum = 0;
         for pattern in patterns {
             let mirror = pattern.mirror().unwrap();
-            println!("Mirror: {:?}", mirror);
+            //println!("Mirror: {:?}", mirror);
             sum += mirror.number();
         }
         println!("Total: {}", sum);

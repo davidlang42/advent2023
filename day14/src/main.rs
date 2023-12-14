@@ -80,9 +80,33 @@ impl Platform {
     fn tilt_north(&self) -> Self {
         let mut new_cols = Vec::new();
         for col in &self.cols {
-            new_cols.push(col.shift_up());
+            new_cols.push(col.shift_left());
         }
         Self::from_cols(new_cols)
+    }
+
+    fn tilt_west(&self) -> Self {
+        let mut new_rows = Vec::new();
+        for row in &self.rows {
+            new_rows.push(row.shift_left());
+        }
+        Self::from_rows(new_rows)
+    }
+
+    fn tilt_south(&self) -> Self {
+        let mut new_cols = Vec::new();
+        for col in &self.cols {
+            new_cols.push(col.shift_right());
+        }
+        Self::from_cols(new_cols)
+    }
+
+    fn tilt_east(&self) -> Self {
+        let mut new_rows = Vec::new();
+        for row in &self.rows {
+            new_rows.push(row.shift_right());
+        }
+        Self::from_rows(new_rows)
     }
 
     fn north_load(&self) -> usize {
@@ -98,16 +122,18 @@ impl Platform {
 }
 
 impl Line {
-    fn shift_up(&self) -> Self {
+    fn shift_left(&self) -> Self {
         let mut vec = self.0.clone();
         let mut rocks = 0;
         for i in (0..vec.len()).rev() {
             match vec[i] {
                 Tile::Cube => {
-                    for j in (i+1)..(i+1+rocks) {
-                        vec[j] = Tile::Round;
+                    if rocks > 0 {
+                        for j in (i+1)..(i+1+rocks) {
+                            vec[j] = Tile::Round;
+                        }
+                        rocks = 0;
                     }
-                    rocks = 0;
                 },
                 Tile::Empty => {
                     // do nothing
@@ -123,6 +149,34 @@ impl Line {
         }
         Self(vec)
     }
+
+    fn shift_right(&self) -> Self {
+        let mut vec = self.0.clone();
+        let mut rocks = 0;
+        for i in 0..vec.len() {
+            match vec[i] {
+                Tile::Cube => {
+                    if rocks > 0 {
+                        for j in (i-1)..(i-1-rocks) {
+                            vec[j] = Tile::Round;
+                        }
+                        rocks = 0;
+                    }
+                },
+                Tile::Empty => {
+                    // do nothing
+                },
+                Tile::Round => {
+                    rocks += 1;
+                    vec[i] = Tile::Empty;
+                }
+            }
+        }
+        for j in (vec.len()-1)..(vec.len()-1-rocks) {
+            vec[j] = Tile::Round;
+        }
+        Self(vec)
+    }
 }
 
 fn main() {
@@ -131,9 +185,15 @@ fn main() {
         let filename = &args[1];
         let text = fs::read_to_string(&filename)
             .expect(&format!("Error reading from {}", filename));
-        let original: Platform = text.parse().unwrap();
-        let tilted = original.tilt_north();
-        println!("Norht load: {}", tilted.north_load());
+        let mut platform: Platform = text.parse().unwrap();
+        let cycles = 1000000000;
+        for _ in 0..cycles {
+            platform = platform.tilt_north();
+            platform = platform.tilt_west();
+            platform = platform.tilt_south();
+            platform = platform.tilt_east();
+        }
+        println!("North load after cycles: {}", platform.north_load());
     } else {
         println!("Please provide 1 argument: Filename");
     }

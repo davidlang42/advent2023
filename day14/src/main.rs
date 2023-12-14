@@ -1,17 +1,19 @@
+use std::collections::HashMap;
 use std::fs;
 use std::env;
 use std::str::FromStr;
 
-#[derive(Copy, Clone, Eq, PartialEq)]
+#[derive(Copy, Clone, Eq, PartialEq, Hash)]
 enum Tile {
     Empty,
     Round,
     Cube
 }
 
-#[derive(Eq, PartialEq)]
+#[derive(Eq, PartialEq, Hash, Clone)]
 struct Line(Vec<Tile>);
 
+#[derive(Eq, PartialEq, Hash, Clone)]
 struct Platform {
     rows: Vec<Line>,
     cols: Vec<Line>
@@ -157,7 +159,7 @@ impl Line {
             match vec[i] {
                 Tile::Cube => {
                     if rocks > 0 {
-                        for j in (i-1)..(i-1-rocks) {
+                        for j in (i-rocks)..i {
                             vec[j] = Tile::Round;
                         }
                         rocks = 0;
@@ -172,7 +174,7 @@ impl Line {
                 }
             }
         }
-        for j in (vec.len()-1)..(vec.len()-1-rocks) {
+        for j in (vec.len()-rocks)..vec.len() {
             vec[j] = Tile::Round;
         }
         Self(vec)
@@ -187,13 +189,34 @@ fn main() {
             .expect(&format!("Error reading from {}", filename));
         let mut platform: Platform = text.parse().unwrap();
         let cycles = 1000000000;
-        for _ in 0..cycles {
+        let mut cache = HashMap::new();
+        let mut cycle = 0;
+        while cycle < cycles {
             platform = platform.tilt_north();
             platform = platform.tilt_west();
             platform = platform.tilt_south();
             platform = platform.tilt_east();
+            if let Some(previous) = cache.insert(platform.clone(), cycle) {
+                println!("Found cycle from {} to {}", previous, cycle);
+                let cadence = cycle - previous;
+                while cycle < cycles {
+                    cycle += cadence;
+                }
+                cycle -= cadence;
+            }
+            cycle += 1;
         }
-        println!("North load after cycles: {}", platform.north_load());
+        for row in &platform.rows {
+            for col in &row.0 {
+                print!("{}", match col {
+                    Tile::Cube => '#',
+                    Tile::Round => 'O',
+                    Tile::Empty => '.'
+                });
+            }
+            println!("");
+        }
+        println!("North load after {} cycles: {}", cycles, platform.north_load());
     } else {
         println!("Please provide 1 argument: Filename");
     }

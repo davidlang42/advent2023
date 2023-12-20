@@ -53,7 +53,8 @@ impl FromStr for Module {
 struct ModuleSet {
     modules: HashMap<String, Module>,
     high_count: usize,
-    low_count: usize
+    low_count: usize,
+    rx_received_low: bool
 }
 
 impl FromStr for ModuleSet {
@@ -68,7 +69,8 @@ impl FromStr for ModuleSet {
         Ok(Self {
             modules,
             high_count: 0,
-            low_count: 0
+            low_count: 0,
+            rx_received_low: false
         })
     }
 }
@@ -109,6 +111,8 @@ impl ModuleSet {
                         q.push_back((module.name.to_owned(), next_pulse, dest.to_owned()));
                     }
                 }
+            } else if to == "rx" && !pulse {
+                self.rx_received_low = true;
             }
         }
     }
@@ -144,8 +148,14 @@ fn main() {
             .expect(&format!("Error reading from {}", filename));
         let mut modules: ModuleSet = text.parse().unwrap();
         modules.reset();
-        for _ in 0..1000 {
+        let mut i = 0;
+        loop {
             modules.press_button();
+            if modules.rx_received_low {
+                println!("At press #{}, rx received low", i+1);
+                break;
+            }
+            i += 1;
         }
         println!("Low count: {}", modules.low_count);
         println!("High count: {}", modules.high_count);
